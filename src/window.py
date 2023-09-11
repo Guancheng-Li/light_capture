@@ -168,8 +168,11 @@ class Window():
         """Copy image to the clipboard, then exit."""
         self._image_to_save = self._render_image_to_save()
         filename = save.get_image_file_name(self._snapshot_time)
-        file_full_name = save.save_to_local(self._image_to_save, filename)
-        if OS_NAME == 'posix':
+        file_full_name = None
+        if OS_NAME == 'nt':
+            file_full_name = save.save_to_local(self._image_to_save, filename)
+        elif OS_NAME == 'posix':
+            file_full_name = save.save_to_local(self._image_to_save, filename, '/tmp')
             posix_util.copy_to_clipboard(file_full_name)
         # load image from file_full_name and pass to clipboard.
         print('Saved to clipboard')

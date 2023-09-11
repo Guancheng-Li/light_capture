@@ -20,10 +20,15 @@ Save related functions.
 
 import os
 
+OS_NAME = os.name
+SAVE_PATH = './saved'
+if OS_NAME == 'posix':
+    SAVE_PATH = os.path.abspath(os.path.expanduser('~/Pictures'))
+
 IMAGE_PRE_FIX = 'LightCapture'
 IMAGE_FORMAT = 'png'
 IMAGE_QUALITY = 100
-SAVE_PATH = './saved'
+
 
 
 def get_image_file_name(time_str, format=IMAGE_FORMAT):
