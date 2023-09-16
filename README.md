@@ -1,7 +1,7 @@
 # Light Capture
 A light weight snapshot tool for Linux, just for fun.
-![Alt text](example/01.png "a title")
-![Alt text](example/02.png "a title")
+![Alt text](example/01.png "Area selection")
+![Alt text](example/02.png "Edit functions")
 
 ## Why
 I am writing this because I need a snapshot tool like QQ embedded one.
@@ -39,11 +39,19 @@ So I just need a easy tool with this features:
 - [x] circle
 - [x] arrow
 - [ ] number
-- [ ] pencil
-- [ ] pen
+- [x] pencil
+  - [ ] optimize the curve
+- [x] pen
+  - [ ] Fix the curve not connect problem
+  - [ ] Support pen size edit
 - [ ] text
-- [ ] blur (pen-mode, rectangle-mode)
-- [ ] erasor (pen-mode, rectangle-mode)
+- [x] blur (pen-mode, rectangle-mode)
+  - [ ] Support pen mode
+  - [ ] Support customize block size
+- [x] eraser (pen-mode, rectangle-mode)
+  - [ ] Support erase edit only
+  - [ ] Support rectangle
+  - [ ] Support pen size edit
 - [x] undo
 - [x] redo
 - [ ] open
@@ -54,18 +62,21 @@ So I just need a easy tool with this features:
 - [ ] put window always on top
 - [ ] centralized configuration management
 - [ ] use gnome-screenshot/scrot for snapshot and edit by this tool(use as merely front end)
-- [ ] Sub Menu
+- [ ] Optimize font settings(by using font family instead of font file)
+- [ ] Sub Menus
   - [ ] Fill Color (RGBA) - rectangle,circle
   - [ ] Fill - rectangle,circle
   - [ ] Border Size - rectangle,circle
   - [ ] Border Color - rectangle,circle
   - [ ] Color - arrow, number, pencil, pen, text
-  - [ ] Size - number, pencil, pen, text, blur, erasor
+  - [ ] Size - number, pencil, pen, text, blur, eraser
   - [ ] Font - text
 - [ ] other functions ...
 
 I am going to finish them with my trivial time out of work.
+
 Welcome to provide good ideas but I will not promise accept and finish them.
+
 Light & Portable is the rule, prefer to abandon some "useful" functions if they do not obey the rule.
 
 # Bugs

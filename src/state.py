@@ -28,19 +28,32 @@ class State(Enum):
     snapshot_edit_rectangle = 11
     snapshot_edit_circle = 12
     snapshot_edit_arrow = 13
+    snapshot_edit_pencil = 14
+    snapshot_edit_pen = 15
+    snapshot_edit_eraser = 16
+    snapshot_edit_blur = 17
 
-
-FUNCTIONAL_STATE = (
+FUNCTIONAL_STATE_RECTANGLE_BASED = (
     State.snapshot_edit_rectangle,
     State.snapshot_edit_circle,
     State.snapshot_edit_arrow,
+    State.snapshot_edit_blur,
 )
 
-EDIT_READY_STATE = (
-    State.snapshot_edit,
-    State.snapshot_edit_rectangle,
-    State.snapshot_edit_circle,
-    State.snapshot_edit_arrow,
+FUNCTIONAL_STATE_TRACKING_BASED = (
+    State.snapshot_edit_pencil,
+    State.snapshot_edit_pen,
+    State.snapshot_edit_eraser,
+)
+
+FUNCTIONAL_STATE = set(
+    list(FUNCTIONAL_STATE_RECTANGLE_BASED) + \
+    list(FUNCTIONAL_STATE_TRACKING_BASED)
+)
+
+EDIT_READY_STATE = set(
+    [State.snapshot_edit] + \
+    list(FUNCTIONAL_STATE),
 )
 
 

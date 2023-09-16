@@ -34,11 +34,11 @@ _FUNCTIONS = [
     'circle',
     'arrow',
     # 'number',
-    # 'pencil',
-    # 'pen',
-    # 'font',
-    # 'blur',
-    # 'erasor',
+    'pencil',
+    'pen',
+    # 'text',
+    'blur',
+    'eraser',
     'undo',
     'redo',
     # 'open',
@@ -62,11 +62,23 @@ _FUNCTION_PROPERTY_MAPPING = {
         'clicked': True,
     },
     'number': {},
-    'pencil': {},
-    'pen': {},
-    'font': {},
-    'blur': {},
-    'erasor': {},
+    'pencil': {
+        'icon': 'pencil',
+        'clicked': True,
+    },
+    'pen': {
+        'icon': 'pen',
+        'clicked': True,
+    },
+    'text': {},
+    'blur': {
+        'icon': 'blur',
+        'clicked': True,
+    },
+    'eraser': {
+        'icon': 'eraser',
+        'clicked': True,
+    },
     'undo': {
         'icon': 'undo',
         'clicked': False,
@@ -77,7 +89,7 @@ _FUNCTION_PROPERTY_MAPPING = {
     },
     'open': {},
     'abort': {
-        'icon': 'cross',
+        'icon': 'close',
         'clicked': False,
     },
     'save': {
@@ -168,11 +180,11 @@ class Menu:
             'circle': lambda:self._onclick_circle(root),
             'arrow': lambda:self._onclick_arrow(root),
             # 'number',
-            # 'pencil',
-            # 'pen',
-            # 'font',
-            # 'blur',
-            # 'erasor',
+            'pencil': lambda:self._onclick_pencil(root),
+            'pen': lambda:self._onclick_pen(root),
+            # 'text',
+            'blur': lambda:self._onclick_blur(root),
+            'eraser': lambda:self._onclick_eraser(root),
             'undo': lambda:root._undo(None),
             'redo': lambda:root._redo(None),
             # 'open',
@@ -193,6 +205,26 @@ class Menu:
 
     def _onclick_arrow(self, root):
         root._update_state(State.snapshot_edit_arrow)
+        self._update_icons(root)
+        # Show sub panel
+
+    def _onclick_pencil(self, root):
+        root._update_state(State.snapshot_edit_pencil)
+        self._update_icons(root)
+        # Show sub panel
+
+    def _onclick_pen(self, root):
+        root._update_state(State.snapshot_edit_pen)
+        self._update_icons(root)
+        # Show sub panel
+
+    def _onclick_eraser(self, root):
+        root._update_state(State.snapshot_edit_eraser)
+        self._update_icons(root)
+        # Show sub panel
+
+    def _onclick_blur(self, root):
+        root._update_state(State.snapshot_edit_blur)
         self._update_icons(root)
         # Show sub panel
 

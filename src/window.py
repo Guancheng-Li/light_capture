@@ -35,7 +35,7 @@ else:
 import history
 import posix_util
 import shape
-from state import State, try_jump_state, FUNCTIONAL_STATE, EDIT_READY_STATE
+from state import *
 from ui.cursor import cursor_icon
 from ui.detail_panel import DetailPanel
 from ui.menu import Menu
@@ -43,9 +43,6 @@ from util import draw
 from util import save
 from util.snapshot import snapshot
 from util.time import get_now_time_str
-
-
-_GOLDEN_RATIO = 0.618
 
 
 class Window():
@@ -201,9 +198,10 @@ class Window():
                 anchor='nw',
                 image=self._detail_image_tk,
                 tag='selection_panel')
-        if self._editing and self._state in FUNCTIONAL_STATE:
+        if self._editing and self._state in FUNCTIONAL_STATE_RECTANGLE_BASED:
+            x_2, y_2 = self._cursor_pos_x, self._cursor_pos_y
             x_1, y_1 = self._editing_area.start_point()
-            callback = draw.STATE_DRAW_MAPPING.get(self._state)
+            callback = draw.STATE_DRAW_MAPPING.get(self._state, None)
             if not callback:
                 print(f'Unregisted state with callback: {self._state}')
             self._editing_image = callback(
@@ -211,8 +209,26 @@ class Window():
                 {
                     'x_1': x_1,
                     'y_1': y_1,
-                    'x_2': self._cursor_pos_x,
-                    'y_2': self._cursor_pos_y,
+                    'x_2': x_2,
+                    'y_2': y_2,
+                    'snapshot': self._full_snapshot if self._state == State.snapshot_edit_blur else None,
+                })
+            self._editing_image_tk = ImageTk.PhotoImage(self._editing_image)
+            self._canvas.create_image(
+                (0, 0),
+                anchor='nw',
+                image=self._editing_image_tk,
+                tag='selection_panel')
+        if self._editing and self._state in FUNCTIONAL_STATE_TRACKING_BASED:
+            x, y = self._cursor_pos_x, self._cursor_pos_y
+            self._editing_area.append((x, y))
+            callback = draw.STATE_DRAW_MAPPING.get(self._state, None)
+            if not callback:
+                print(f'Unregisted state with callback: {self._state}')
+            self._editing_image = callback(
+                self._screen_width, self._screen_height,
+                {
+                    'points': self._editing_area,
                 })
             self._editing_image_tk = ImageTk.PhotoImage(self._editing_image)
             self._canvas.create_image(
@@ -236,9 +252,13 @@ class Window():
         if self._state == State.area_not_selected:
             self._selected_area.set_start(x, y)
             self._state = State.area_selecting
-        if not self._editing and self._state in FUNCTIONAL_STATE:
+        if not self._editing and self._state in FUNCTIONAL_STATE_RECTANGLE_BASED:
             self._editing_area = shape.Rectangle()
             self._editing_area.set_start(x, y)
+            self._editing = True
+        if not self._editing and self._state in FUNCTIONAL_STATE_TRACKING_BASED:
+            self._editing_area = []
+            self._editing_area.append((x, y))
             self._editing = True
 
     def _left_key_up(self, event):
@@ -246,14 +266,15 @@ class Window():
         if self._state == State.area_selecting:
             self._selected_area.set_end(x, y)
             self._state = State.snapshot_edit
-        if self._editing and self._state in FUNCTIONAL_STATE:
+        # TODO: Merge with the cursor move.
+        if self._editing and self._state in FUNCTIONAL_STATE_RECTANGLE_BASED:
             self._editing_area.set_end(x, y)
-            x_1, y_1 = self._editing_area.start_point()
             x_2, y_2 = self._editing_area.end_point()
+            x_1, y_1 = self._editing_area.start_point()
             if abs(x_1 - x_2) < 5 or abs(y_1 - y_2) < 5:
                 # print('Avoid double-click mis-match.')
                 return
-            callback = draw.STATE_DRAW_MAPPING.get(self._state)
+            callback = draw.STATE_DRAW_MAPPING.get(self._state, None)
             if not callback:
                 print(f'Unregisted state with callback: {self._state}')
             image = callback(
@@ -263,6 +284,22 @@ class Window():
                     'y_1': y_1,
                     'x_2': x_2,
                     'y_2': y_2,
+                    'snapshot': self._full_snapshot if self._state == State.snapshot_edit_blur else None,
+                })
+            self._history.append(image)
+            self._editing_image = None
+            self._editing_image_tk = None
+            self._editing = False
+            self._canvas_need_update = True
+        if self._editing and self._state in FUNCTIONAL_STATE_TRACKING_BASED:
+            self._editing_area.append((x, y))
+            callback = draw.STATE_DRAW_MAPPING.get(self._state, None)
+            if not callback:
+                print(f'Unregisted state with callback: {self._state}')
+            image = callback(
+                self._screen_width, self._screen_height,
+                {
+                    'points': self._editing_area,
                 })
             self._history.append(image)
             self._editing_image = None
@@ -290,13 +327,11 @@ class Window():
 
     def _undo(self, event=None):
         """Move backward 1 step if possible."""
-        print('Conduct undo.')
         self._history.backward()
         self._canvas_need_update = True
 
     def _redo(self, event=None):
         """Move foreward 1 step if possible."""
-        print('Conduct redo.')
         self._history.forward()
         self._canvas_need_update = True
 
