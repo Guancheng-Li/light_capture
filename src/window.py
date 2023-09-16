@@ -19,10 +19,6 @@ Window for this tool.
 """
 
 import os
-# import queue
-# import threading
-# import time
-# import keyboard
 
 from PIL import Image, ImageTk
 import tkinter as tk
@@ -39,7 +35,7 @@ else:
 import history
 import posix_util
 import shape
-from state import State, try_jump_state
+from state import State, try_jump_state, FUNCTIONAL_STATE, EDIT_READY_STATE
 from ui.cursor import cursor_icon
 from ui.detail_panel import DetailPanel
 from ui.menu import Menu
@@ -205,25 +201,12 @@ class Window():
                 anchor='nw',
                 image=self._detail_image_tk,
                 tag='selection_panel')
-        if self._state == State.snapshot_edit_rectangle and self._editing:
+        if self._editing and self._state in FUNCTIONAL_STATE:
             x_1, y_1 = self._editing_area.start_point()
-            self._editing_image = draw.draw_rectangle(
-                self._screen_width, self._screen_height,
-                {
-                    'x_1': x_1,
-                    'y_1': y_1,
-                    'x_2': self._cursor_pos_x,
-                    'y_2': self._cursor_pos_y,
-                })
-            self._editing_image_tk = ImageTk.PhotoImage(self._editing_image)
-            self._canvas.create_image(
-                (0, 0),
-                anchor='nw',
-                image=self._editing_image_tk,
-                tag='selection_panel')
-        elif self._state == State.snapshot_edit_arrow and self._editing:
-            x_1, y_1 = self._editing_area.start_point()
-            self._editing_image = draw.draw_arrow(
+            callback = draw.STATE_DRAW_MAPPING.get(self._state)
+            if not callback:
+                print(f'Unregisted state with callback: {self._state}')
+            self._editing_image = callback(
                 self._screen_width, self._screen_height,
                 {
                     'x_1': x_1,
@@ -239,7 +222,7 @@ class Window():
                 tag='selection_panel')
 
     def _update_menu(self):
-        if self._state == State.snapshot_edit:
+        if self._state in EDIT_READY_STATE:
             if self._menu is None:
                 self._menu = Menu(self)
             else:
@@ -253,11 +236,7 @@ class Window():
         if self._state == State.area_not_selected:
             self._selected_area.set_start(x, y)
             self._state = State.area_selecting
-        if self._state == State.snapshot_edit_rectangle and not self._editing:
-            self._editing_area = shape.Rectangle()
-            self._editing_area.set_start(x, y)
-            self._editing = True
-        if self._state == State.snapshot_edit_arrow and not self._editing:
+        if not self._editing and self._state in FUNCTIONAL_STATE:
             self._editing_area = shape.Rectangle()
             self._editing_area.set_start(x, y)
             self._editing = True
@@ -267,33 +246,17 @@ class Window():
         if self._state == State.area_selecting:
             self._selected_area.set_end(x, y)
             self._state = State.snapshot_edit
-        if self._state == State.snapshot_edit_rectangle and self._editing:
-            self._editing_area.set_end(x, y)
-            x_1, y_1, x_2, y_2 = self._editing_area.rectangle()
-            if abs(x_1 - x_2) < 5 or abs(y_1 - y_2) < 5:
-                # print('Avoid double-click mis-match.')
-                return
-            image = draw.draw_rectangle(
-                self._screen_width, self._screen_height,
-                {
-                    'x_1': x_1,
-                    'y_1': y_1,
-                    'x_2': x_2,
-                    'y_2': y_2,
-                })
-            self._history.append(image)
-            self._editing_image = None
-            self._editing_image_tk = None
-            self._editing = False
-            self._canvas_need_update = True
-        if self._state == State.snapshot_edit_arrow and self._editing:
+        if self._editing and self._state in FUNCTIONAL_STATE:
             self._editing_area.set_end(x, y)
             x_1, y_1 = self._editing_area.start_point()
             x_2, y_2 = self._editing_area.end_point()
             if abs(x_1 - x_2) < 5 or abs(y_1 - y_2) < 5:
                 # print('Avoid double-click mis-match.')
                 return
-            image = draw.draw_arrow(
+            callback = draw.STATE_DRAW_MAPPING.get(self._state)
+            if not callback:
+                print(f'Unregisted state with callback: {self._state}')
+            image = callback(
                 self._screen_width, self._screen_height,
                 {
                     'x_1': x_1,
@@ -324,6 +287,18 @@ class Window():
             if self._menu.inside(x, y):
                 return
         self._exit_and_save_to_clipboard(event)
+
+    def _undo(self, event=None):
+        """Move backward 1 step if possible."""
+        print('Conduct undo.')
+        self._history.backward()
+        self._canvas_need_update = True
+
+    def _redo(self, event=None):
+        """Move foreward 1 step if possible."""
+        print('Conduct redo.')
+        self._history.forward()
+        self._canvas_need_update = True
 
     def _render_image_to_save(self):
         image = Image.new(
@@ -360,31 +335,6 @@ class Window():
                     image=item)
         self._canvas_need_update = False
 
-    # def _check_esc_pressed(input_queue):
-    #     while True:
-    #         if keyboard.is_pressed('esc'):
-    #             input_queue.put('esc')
-    #         time.sleep(0.1) # seconds
-
-    # def _keyboard_listen(self):
-    #     # Create another thread that monitors the keyboard
-    #     input_queue = queue.Queue()
-    #     kb_input_thread = threading.Thread(target=self._check_esc_pressed, args=(input_queue,))
-    #     kb_input_thread.daemon = True
-    #     kb_input_thread.start()
-
-    #     # Main logic loop
-    #     run_active = True
-    #     while True:
-    #         if not input_queue.empty():
-    #             if (run_active) and (input_queue.get() == 'esc'):
-    #                 run_active = False
-    #                 self._exit()
-    #             if (run_active) and (input_queue.get() == 'enter'):
-    #                 run_active = False
-    #                 self._exit_and_save_to_clipboard()
-    #         time.sleep(0.1)  # seconds
-
     def _update(self):
         # print(get_now_time_str())
         self._root.after(100, self._update)
@@ -396,7 +346,4 @@ class Window():
     # Public
     def display(self):
         self._update()
-        # main_loop_thread = threading.Thread(target=self._keyboard_listen)
-        # main_loop_thread.daemon = True
-        # main_loop_thread.start()
         self._root.mainloop()

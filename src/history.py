@@ -23,11 +23,14 @@ from PIL import ImageTk
 class History:
     def __init__(self):
         self._stack = []
-        self._current = self.top()
+        self._current = -1
         self._image_tk = []
 
     def top(self):
         return len(self._stack) - 1
+
+    def is_top(self):
+        return self._current == len(self._stack) - 1
 
     def is_none(self):
         return self._current < 0
@@ -45,3 +48,15 @@ class History:
         for i in range(self._current + 1):
             self._image_tk.append(ImageTk.PhotoImage(self._stack[i]))
         return self._image_tk
+
+    def backward(self):
+        if self.is_none():
+            print('Cannot move backword now, it is already on botton.')
+            return
+        self._current -= 1
+
+    def forward(self):
+        if self.is_top():
+            print('Cannot move forward now, it is already on top.')
+            return
+        self._current += 1

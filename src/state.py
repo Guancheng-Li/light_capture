@@ -26,21 +26,27 @@ class State(Enum):
     area_selecting = 2
     snapshot_edit = 3
     snapshot_edit_rectangle = 11
-    snapshot_edit_arrow = 12
+    snapshot_edit_circle = 12
+    snapshot_edit_arrow = 13
+
 
 FUNCTIONAL_STATE = (
     State.snapshot_edit_rectangle,
+    State.snapshot_edit_circle,
     State.snapshot_edit_arrow,
 )
 
 EDIT_READY_STATE = (
     State.snapshot_edit,
     State.snapshot_edit_rectangle,
+    State.snapshot_edit_circle,
     State.snapshot_edit_arrow,
 )
 
+
 def next_state(current_state):
     return None
+
 
 def try_jump_state(from_state, to_state):
     if to_state in FUNCTIONAL_STATE:

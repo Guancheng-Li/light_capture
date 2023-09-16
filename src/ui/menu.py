@@ -31,16 +31,16 @@ from state import State, EDIT_READY_STATE, FUNCTIONAL_STATE
 _FUNCTIONS = [
     # 'move',
     'rectangle',
-    # 'circle',
+    'circle',
     'arrow',
     # 'number',
-    # 'pencel',
+    # 'pencil',
     # 'pen',
     # 'font',
     # 'blur',
     # 'erasor',
-    # 'undo',
-    # 'redo',
+    'undo',
+    'redo',
     # 'open',
     'abort',
     'save',
@@ -62,13 +62,19 @@ _FUNCTION_PROPERTY_MAPPING = {
         'clicked': True,
     },
     'number': {},
-    'pencel': {},
+    'pencil': {},
     'pen': {},
     'font': {},
     'blur': {},
     'erasor': {},
-    'undo': {},
-    'redo': {},
+    'undo': {
+        'icon': 'undo',
+        'clicked': False,
+    },
+    'redo': {
+        'icon': 'redo',
+        'clicked': False,
+    },
     'open': {},
     'abort': {
         'icon': 'cross',
@@ -159,16 +165,16 @@ class Menu:
         self._menu_callbacks = {
             # 'move',
             'rectangle': lambda:self._onclick_rectangle(root),
-            # 'circle',
+            'circle': lambda:self._onclick_circle(root),
             'arrow': lambda:self._onclick_arrow(root),
             # 'number',
-            # 'pencel',
+            # 'pencil',
             # 'pen',
             # 'font',
             # 'blur',
             # 'erasor',
-            # 'undo',
-            # 'redo',
+            'undo': lambda:root._undo(None),
+            'redo': lambda:root._redo(None),
             # 'open',
             'abort': lambda:root._exit(None),
             'save': lambda:root._exit_and_save_to_file(None),
@@ -177,6 +183,11 @@ class Menu:
 
     def _onclick_rectangle(self, root):
         root._update_state(State.snapshot_edit_rectangle)
+        self._update_icons(root)
+        # Show sub panel
+
+    def _onclick_circle(self, root):
+        root._update_state(State.snapshot_edit_circle)
         self._update_icons(root)
         # Show sub panel
 
@@ -203,6 +214,7 @@ class Menu:
         ).inside(x, y)
 
     def show(self, root):
+        # create
         if not self._menu_buttons:
             for i, info in enumerate(self._button_info):
                 self._menu_buttons.append(tk.Button(
@@ -211,9 +223,16 @@ class Menu:
                     bd=0,
                     command=self._menu_callbacks[info['name']],
                 ))
-
+        # update
         for i, button in enumerate(self._menu_buttons):
             button.place(
                 relx=self._button_info[i]['pos_x'],
                 rely=self._button_info[i]['pos_y'],
                 anchor='nw')
+            # disable undo/redo on demand.
+            if self._button_info[i]['name'] == 'undo':
+                state = tk.DISABLED if root._history.is_none() else tk.NORMAL
+                button.config(state=state)
+            if self._button_info[i]['name'] == 'redo':
+                state = tk.DISABLED if root._history.is_top() else tk.NORMAL
+                button.config(state=state)

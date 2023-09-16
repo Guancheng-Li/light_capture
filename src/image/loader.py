@@ -33,6 +33,8 @@ _ICON_MAPPING = {
     'move_clicked': f'move_{_CLICKED_COLOR}',
     'rectangle': 'rectangle',
     'rectangle_clicked': f'rectangle_{_CLICKED_COLOR}',
+    'undo': 'undo',
+    'redo': 'redo',
     'save': 'save',
 }
 
